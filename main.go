@@ -12,10 +12,11 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-var cache map[Key]*BlobData
-var secret string
-var endpoint string
-var fresh time.Duration
+var cache map[Key]*BlobData // Cached blob data store
+var secret string           // The secret to use when requesting blobs
+var endpoint string         // The Viteset API endpoint to use
+var fresh time.Duration     // How long the app caches a blob
+var onlyKey *string         // If set, app ignores the request path and always requests data for this blob
 
 const defaultEndpoint = "https://api.viteset.com"
 const defaultFresh = 15 * time.Second
@@ -126,13 +127,17 @@ func tty() bool {
 func init() {
 	cache = map[Key]*BlobData{}
 
-	secret = mustEnv("CLIENT_SECRET")
-	endpoint = maybeEnv("VITESET_ENDPOINT", defaultEndpoint)
-	reqFresh := os.Getenv("FRESH_SECS")
+	secret = mustEnv("SECRET")
+	endpoint = maybeEnv("ENDPOINT", defaultEndpoint)
+	reqKey := os.Getenv("BLOB")
+	if reqKey != "" {
+		onlyKey = &reqKey
+	}
+	reqFresh := os.Getenv("FRESH")
 	if reqFresh != "" {
 		secs, err := strconv.ParseInt(reqFresh, 10, 0)
 		if err != nil {
-			log.Fatal().Err(err).Str("value", reqFresh).Msg("Invalid integer value for FRESH_SECS")
+			log.Fatal().Err(err).Str("value", reqFresh).Msg("Invalid integer value for FRESH")
 		}
 		fresh = time.Duration(secs) * time.Second
 	} else {
@@ -150,6 +155,10 @@ func init() {
 func main() {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		key := r.URL.Path[1:]
+		if onlyKey != nil {
+			key = *onlyKey
+		}
+
 		found, val, err := lookup(Key(key))
 		if err != nil {
 			log.Error().Str("key", key).Err(err).Msg("Error fetching blob")
@@ -164,9 +173,18 @@ func main() {
 		w.Write(val)
 	})
 
-	host := maybeEnv("HOST", "")
-	port := maybeEnv("PORT", "5224")
+	host := maybeEnv("HOST", "0.0.0.0")
+	port := maybeEnv("PORT", "80")
 	addr := fmt.Sprintf("%s:%s", host, port)
-	log.Info().Str("address", addr).Str("endpoint", endpoint).Dur("fresh_secs", fresh).Msg("Viteset Sidecar is ready")
+	blob := "<specified by requester>"
+	if onlyKey != nil {
+		blob = *onlyKey
+	}
+	log.Info().
+		Str("address", addr).
+		Str("endpoint", endpoint).
+		Interface("blob", blob).
+		Dur("fresh_secs", fresh).
+		Msg("Viteset Sidecar is ready")
 	log.Fatal().Err(http.ListenAndServe(addr, nil)).Send()
 }
