@@ -125,8 +125,13 @@ func tty() bool {
 
 // init configures the application on startup.
 func init() {
-	cache = map[Key]*BlobData{}
+	zerolog.TimeFieldFormat = zerolog.TimeFormatUnixMs
+	zerolog.DurationFieldUnit = time.Second
+	if tty() {
+		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.RFC3339})
+	}
 
+	cache = map[Key]*BlobData{}
 	secret = mustEnv("SECRET")
 	endpoint = maybeEnv("ENDPOINT", defaultEndpoint)
 	reqKey := os.Getenv("BLOB")
@@ -142,12 +147,6 @@ func init() {
 		fresh = time.Duration(secs) * time.Second
 	} else {
 		fresh = defaultFresh
-	}
-
-	zerolog.TimeFieldFormat = zerolog.TimeFormatUnixMs
-	zerolog.DurationFieldUnit = time.Second
-	if tty() {
-		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.RFC3339})
 	}
 }
 
