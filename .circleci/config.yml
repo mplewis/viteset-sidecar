@@ -1,0 +1,30 @@
+version: 2.1
+
+orbs:
+  docker: circleci/docker@1.6.0
+
+workflows:
+  cicd:
+    jobs:
+      - docker/publish:
+          name: Build Docker image
+          before_build:
+            - run: echo 'export SHORT_SHA="$(echo "$CIRCLE_SHA1" | cut -c -7)"'>> $BASH_ENV
+          image: $CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME
+          tag: latest,$SHORT_SHA
+          deploy: false
+          filters:
+            branches:
+              ignore: main
+      - docker/publish:
+          name: Publish Docker image
+          context:
+            - Docker Hub
+          before_build:
+            - run: echo 'export SHORT_SHA="$(echo "$CIRCLE_SHA1" | cut -c -7)"'>> $BASH_ENV
+          image: $CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME
+          tag: latest,$SHORT_SHA
+          update-description: true
+          filters:
+            branches:
+              only: main
