@@ -6,12 +6,16 @@ services:
     depends_on:
       - sidecar
     entrypoint: sh
-    command: -c "while true; do curl -s sidecar; sleep 3; done"
+    command: |
+      -c "
+        while true; do
+          curl -s http://sidecar
+          sleep 3
+        done
+      "
 
   sidecar:
-    build:
-      context: ..
-      target: prod
+    image: mplewis/viteset-sidecar:latest
     environment:
-      SECRET: YOUR_VITESET_CLIENT_SECRET_HERE
-      BLOB: YOUR_VITESET_BLOB_NAME_HERE
+      SECRET: sMsazf7ybW6qHkbzk2eGyr8n5U8EEo5q
+      BLOB: my_other_app
