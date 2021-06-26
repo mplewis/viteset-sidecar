@@ -1,0 +1,17 @@
+version: "3.8"
+
+services:
+  app:
+    image: curlimages/curl:latest
+    depends_on:
+      - sidecar
+    entrypoint: sh
+    command: -c "while true; do curl -s sidecar; sleep 3; done"
+
+  sidecar:
+    build:
+      context: ..
+      target: prod
+    environment:
+      SECRET: YOUR_VITESET_CLIENT_SECRET_HERE
+      BLOB: YOUR_VITESET_BLOB_NAME_HERE
