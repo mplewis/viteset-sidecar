@@ -4,6 +4,8 @@ The Viteset Sidecar is an easy way to wire your Viteset blobs into your cloud-na
 
 # Usage
 
+## Docker
+
 Try the sidecar by running it locally:
 
 ```sh
@@ -29,6 +31,14 @@ docker run \
 
 Now, try `curl http://localhost:8000/YOUR_VITESET_BLOB_NAME_HERE` to get a blob by name.
 
+## Docker Compose
+
+See the Compose file in [examples/docker-compose.yaml](examples/docker-compose.yaml) which runs an `app` container to poll the value of a blob you define. Make sure to replace the `SECRET` and `BLOB` placeholders with values from your own account.
+
+## Kubernetes
+
+Coming soon.
+
 # Caching
 
 The sidecar assumes that app configuration changes infrequently, but that you want to see changes in production relatively soon after you update your blobs. To reduce load on Viteset servers, the sidecar caches your blobs locally for 15 seconds by default.
@@ -47,9 +57,3 @@ The Sidecar is configured by setting the environment variables below:
 | `HOST`     | string | 0.0.0.0                   |                    | The host to listen on                                                            |
 | `PORT`     | int    | 80                        |                    | The port to listen on                                                            |
 | `ENDPOINT` | string | `https://api.viteset.com` |                    | The Viteset API endpoint to use                                                  |
-
-# Example Usage
-
-**Docker Compose:** See the Compose file in [examples/docker-compose.yaml](examples/docker-compose.yaml) which runs an `app` container to poll the value of a blob you define. Make sure to replace the `SECRET` and `BLOB` placeholders with values from your own account.
-
-**Kubernetes:** Coming soon.

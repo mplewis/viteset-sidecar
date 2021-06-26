@@ -1,0 +1,21 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: viteset-sidecar-demo
+spec:
+  replicas: 1
+  template:
+    spec:
+      containers:
+        - name: app
+          image: ubuntu
+          resources:
+            limits:
+              cpu: 1
+              memory: 512Mi
+        - name: app
+          image: ubuntu
+          resources:
+            limits:
+              cpu: 1
+              memory: 64Mi
