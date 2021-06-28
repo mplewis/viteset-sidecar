@@ -17,5 +17,5 @@ services:
   sidecar:
     image: mplewis/viteset-sidecar:latest
     environment:
-      SECRET: sMsazf7ybW6qHkbzk2eGyr8n5U8EEo5q
-      BLOB: my_other_app
+      SECRET: YOUR_VITESET_CLIENT_SECRET_HERE
+      BLOB: YOUR_VITESET_BLOB_NAME_HERE
