@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/markelog/release"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
@@ -18,8 +19,13 @@ var endpoint string         // The Viteset API endpoint to use
 var fresh time.Duration     // How long the app caches a blob
 var onlyKey *string         // If set, app ignores the request path and always requests data for this blob
 
-const defaultEndpoint = "https://api.viteset.com"
+const version = "1.0.0"
+
+// const defaultEndpoint = "https://api.viteset.com"
+const defaultEndpoint = "http://localhost:8000"
 const defaultFresh = 15 * time.Second
+
+var userAgent string
 
 // Key is a key that corresponds to a config blob.
 type Key string
@@ -76,6 +82,7 @@ func lookup(key Key) (found bool, val []byte, err error) {
 	client := &http.Client{}
 	url := fmt.Sprintf("%s/%s", endpoint, key)
 	req, err := http.NewRequest("GET", url, nil)
+	req.Header.Set("User-Agent", userAgent)
 	if err != nil {
 		return false, nil, err
 	}
@@ -129,6 +136,14 @@ func init() {
 	zerolog.DurationFieldUnit = time.Second
 	if tty() {
 		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.RFC3339})
+	}
+
+	_, anon := os.LookupEnv("DO_NOT_FINGERPRINT")
+	if anon {
+		userAgent = fmt.Sprintf("Viteset-Sidecar/%s", version)
+	} else {
+		var osType, osName, osVer = release.All()
+		userAgent = fmt.Sprintf("Viteset-Sidecar/%s (%s %s %s)", version, osType, osName, osVer)
 	}
 
 	cache = map[Key]*BlobData{}

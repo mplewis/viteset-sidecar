@@ -49,11 +49,12 @@ You can change this value by setting `FRESH` to your desired cache expiry time, 
 
 The Sidecar is configured by setting the environment variables below:
 
-| key        | type   | default                   | mandatory?         | description                                                                      |
-| ---------- | ------ | ------------------------- | ------------------ | -------------------------------------------------------------------------------- |
-| `SECRET`   | string | _none_                    | :white_check_mark: | The client secret used to fetch blobs                                            |
-| `BLOB`     | string | _none_                    |                    | If set, only fetches the blob with this specific key, regardless of request path |
-| `FRESH`    | int    | 15                        |                    | How long to wait, in seconds, before checking if a blob has a new value          |
-| `HOST`     | string | 0.0.0.0                   |                    | The host to listen on                                                            |
-| `PORT`     | int    | 8174                      |                    | The port to listen on                                                            |
-| `ENDPOINT` | string | `https://api.viteset.com` |                    | The Viteset API endpoint to use                                                  |
+| key                  | type   | default                   | mandatory?         | description                                                                                      |
+| -------------------- | ------ | ------------------------- | ------------------ | ------------------------------------------------------------------------------------------------ |
+| `SECRET`             | string | _none_                    | :white_check_mark: | The client secret used to fetch blobs                                                            |
+| `BLOB`               | string | _none_                    |                    | If set, only fetches the blob with this specific key, regardless of request path                 |
+| `FRESH`              | int    | 15                        |                    | How long to wait, in seconds, before checking if a blob has a new value                          |
+| `HOST`               | string | 0.0.0.0                   |                    | The host to listen on                                                                            |
+| `PORT`               | int    | 8174                      |                    | The port to listen on                                                                            |
+| `ENDPOINT`           | string | `https://api.viteset.com` |                    | The Viteset API endpoint to use                                                                  |
+| `DO_NOT_FINGERPRINT` | bool   | _none_                    |                    | If set, omits OS information (e.g `osx El Capitan 11.16`) from the mandatory `User-Agent` header |
