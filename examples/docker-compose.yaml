@@ -9,7 +9,7 @@ services:
     command: |
       -c "
         while true; do
-          curl -s http://sidecar
+          curl -s http://sidecar:8174
           sleep 3
         done
       "

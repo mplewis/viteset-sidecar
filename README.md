@@ -12,11 +12,11 @@ Try the sidecar by running it locally:
 docker run \
   -e SECRET=YOUR_VITESET_CLIENT_SECRET_HERE \
   -e BLOB=YOUR_VITESET_BLOB_NAME_HERE \
-  -p 8000:80
+  -p 8174:8174
   -it mplewis/viteset-sidecar
 ```
 
-Then run `curl http://localhost:8000` to retrive the value of your blob from Viteset.
+Then run `curl http://localhost:8174` to retrive the value of your blob from Viteset.
 
 If your app is only using one blob for configuration, you usually want to configure both `SECRET` and `BLOB`. This lets your app make a GET request to the sidecar without having to know the name of the config blob.
 
@@ -25,11 +25,11 @@ If you want to grant your app access to all blobs for its client, you can omit `
 ```sh
 docker run \
   -e SECRET=YOUR_VITESET_CLIENT_SECRET_HERE \
-  -p 8000:80
+  -p 8174:8174
   -it mplewis/viteset-sidecar
 ```
 
-Now, try `curl http://localhost:8000/YOUR_VITESET_BLOB_NAME_HERE` to get a blob by name.
+Now, try `curl http://localhost:8174/YOUR_VITESET_BLOB_NAME_HERE` to get a blob by name.
 
 ## Docker Compose
 
@@ -55,5 +55,5 @@ The Sidecar is configured by setting the environment variables below:
 | `BLOB`     | string | _none_                    |                    | If set, only fetches the blob with this specific key, regardless of request path |
 | `FRESH`    | int    | 15                        |                    | How long to wait, in seconds, before checking if a blob has a new value          |
 | `HOST`     | string | 0.0.0.0                   |                    | The host to listen on                                                            |
-| `PORT`     | int    | 80                        |                    | The port to listen on                                                            |
+| `PORT`     | int    | 8174                      |                    | The port to listen on                                                            |
 | `ENDPOINT` | string | `https://api.viteset.com` |                    | The Viteset API endpoint to use                                                  |

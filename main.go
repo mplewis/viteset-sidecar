@@ -173,7 +173,7 @@ func main() {
 	})
 
 	host := maybeEnv("HOST", "0.0.0.0")
-	port := maybeEnv("PORT", "80")
+	port := maybeEnv("PORT", "8174")
 	addr := fmt.Sprintf("%s:%s", host, port)
 	blob := "<specified by requester>"
 	if onlyKey != nil {
