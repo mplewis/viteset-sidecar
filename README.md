@@ -1,6 +1,6 @@
 # Viteset Sidecar
 
-The Viteset Sidecar is an easy way to wire a Viteset blob into your cloud-native app without adding any libraries to your app. To get the value of the blob, your app makes a `GET http://sidecar:8125` request which returns the latest-known value for the blob.
+The Viteset Sidecar is an easy way to wire a Viteset blob into your cloud-native app without adding any libraries to your app. To get the value of the blob, your app makes a `GET http://sidecar:8174` request which returns the latest-known value for the blob.
 
 # Usage
 
