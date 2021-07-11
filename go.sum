@@ -2,6 +2,8 @@ github.com/coreos/go-systemd/v22 v22.3.2/go.mod h1:Y58oyj3AT4RCenI/lSvhwexgC+NSV
 github.com/godbus/dbus/v5 v5.0.4/go.mod h1:xhWf0FNVPg57R7Z0UbKHbJfkEywrmjJnf7w5xrFpKfA=
 github.com/markelog/release v0.0.0-20190608215730-edcab05862d0 h1:j7qON1RWlhziE0Z8Te6+mD5u2Qk6X/rq6zbkOlnE+pM=
 github.com/markelog/release v0.0.0-20190608215730-edcab05862d0/go.mod h1:cT6MzxN4/sjmTIlcF7UIZ8KO8C23+PmhN+NVBb75UNw=
+github.com/mplewis/viteset-client-go v0.0.0-20210710211712-63856b7e7b86 h1:JZI8c8t71O32YdtnXYT/m+Fp0mjfz33ERRB/QEnQcyA=
+github.com/mplewis/viteset-client-go v0.0.0-20210710211712-63856b7e7b86/go.mod h1:IRgGfXC2BtwBjgrwfgrFlhAistkPCa87IFuuAyyEfWU=
 github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/rs/xid v1.2.1/go.mod h1:+uKXf+4Djp6Md1KODXJxgGQPKngRmWyn10oCKFzNHOQ=
 github.com/rs/zerolog v1.23.0 h1:UskrK+saS9P9Y789yNNulYKdARjPZuS35B8gJF2x60g=

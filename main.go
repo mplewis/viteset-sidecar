@@ -2,51 +2,23 @@ package main
 
 import (
 	"fmt"
-	"io"
 	"net/http"
 	"os"
 	"strconv"
 	"time"
 
-	"github.com/markelog/release"
+	client "github.com/mplewis/viteset-client-go"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
 
-var cache map[Key]*BlobData // Cached blob data store
-var secret string           // The secret to use when requesting blobs
-var endpoint string         // The Viteset API endpoint to use
-var fresh time.Duration     // How long the app caches a blob
-var onlyKey *string         // If set, app ignores the request path and always requests data for this blob
+var interval time.Duration
 
-const version = "1.0.0"
-
-// const defaultEndpoint = "https://api.viteset.com"
-const defaultEndpoint = "http://localhost:8000"
-const defaultFresh = 15 * time.Second
-
-var userAgent string
+const defaultEndpoint = "https://api.viteset.com"
+const defaultInterval = 15 * time.Second
 
 // Key is a key that corresponds to a config blob.
 type Key string
-
-// BlobData is the data for a recently-fetched blob.
-type BlobData struct {
-	val   []byte
-	stamp string
-	at    time.Time
-}
-
-// fresh returns true if this blob has been fetched recently,
-// along with the amount of time for which this blob will be fresh.
-func (b *BlobData) fresh() (stillFresh bool, remain time.Duration) {
-	expiry := b.at.Add(fresh)
-	now := time.Now()
-	if now.After(expiry) {
-		return false, 0
-	}
-	return true, expiry.Sub(now)
-}
 
 // mustEnv fetches an environment variable that is required to exist.
 func mustEnv(key string) string {
@@ -66,64 +38,6 @@ func maybeEnv(key string, dfault string) string {
 	return val
 }
 
-// lookup fetches a blob from Viteset if the cached value is stale or missing.
-func lookup(key Key) (found bool, val []byte, err error) {
-	cached := cache[key]
-	log := log.With().Str("key", string(key)).Bool("cached", cached != nil).Logger()
-
-	if cached != nil {
-		stillFresh, remain := cached.fresh()
-		if stillFresh {
-			log.Info().Dur("remain", remain).Msg("Blob is still fresh, not fetching")
-			return true, cached.val, nil
-		}
-	}
-
-	client := &http.Client{}
-	url := fmt.Sprintf("%s/%s", endpoint, key)
-	req, err := http.NewRequest("GET", url, nil)
-	req.Header.Set("User-Agent", userAgent)
-	if err != nil {
-		return false, nil, err
-	}
-	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", secret))
-	if cached != nil {
-		req.Header.Add("If-None-Match", cached.stamp)
-	}
-	resp, err := client.Do(req)
-	if err != nil {
-		return false, nil, err
-	}
-
-	if resp.StatusCode == http.StatusNotModified && cached != nil {
-		log.Info().Msg("Blob fetched and unchanged")
-		cached.at = time.Now()
-		return true, cached.val, nil
-	}
-	if resp.StatusCode == http.StatusNotFound {
-		log.Warn().Msg("Blob not found")
-		return false, nil, nil
-	}
-	if resp.StatusCode != http.StatusOK {
-		return false, nil, fmt.Errorf("expected status 200 OK but got %d", resp.StatusCode)
-	}
-
-	stamp := resp.Header.Get("ETag")
-	val, err = io.ReadAll(resp.Body)
-	if err != nil {
-		return false, nil, err
-	}
-	if cached == nil {
-		cache[key] = &BlobData{val: val, stamp: stamp, at: time.Now()}
-	} else {
-		cached.val = val
-		cached.stamp = stamp
-		cached.at = time.Now()
-	}
-	log.Info().Msg("Blob fetched and updated")
-	return true, val, nil
-}
-
 // tty returns true if the current terminal is interactive.
 func tty() bool {
 	fileInfo, _ := os.Stdout.Stat()
@@ -138,67 +52,51 @@ func init() {
 		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.RFC3339})
 	}
 
-	_, anon := os.LookupEnv("DO_NOT_FINGERPRINT")
-	if anon {
-		userAgent = fmt.Sprintf("Viteset-Sidecar/%s", version)
-	} else {
-		var osType, osName, osVer = release.All()
-		userAgent = fmt.Sprintf("Viteset-Sidecar/%s (%s %s %s)", version, osType, osName, osVer)
-	}
-
-	cache = map[Key]*BlobData{}
-	secret = mustEnv("SECRET")
-	endpoint = maybeEnv("ENDPOINT", defaultEndpoint)
-	reqKey := os.Getenv("BLOB")
-	if reqKey != "" {
-		onlyKey = &reqKey
-	}
+	interval = defaultInterval
 	reqFresh := os.Getenv("FRESH")
 	if reqFresh != "" {
 		secs, err := strconv.ParseInt(reqFresh, 10, 0)
 		if err != nil {
 			log.Fatal().Err(err).Str("value", reqFresh).Msg("Invalid integer value for FRESH")
 		}
-		fresh = time.Duration(secs) * time.Second
-	} else {
-		fresh = defaultFresh
+		interval = time.Duration(secs) * time.Second
 	}
 }
 
 // main starts the sidecar webserver.
 func main() {
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		key := r.URL.Path[1:]
-		if onlyKey != nil {
-			key = *onlyKey
-		}
+	blob := mustEnv("BLOB")
+	endpoint := maybeEnv("ENDPOINT", defaultEndpoint)
+	c := client.Client{Secret: mustEnv("SECRET"), Blob: blob, Host: endpoint, Interval: interval}
+	ch, err := c.Subscribe()
+	if err != nil {
+		log.Panic().Err(err).Msg("Failed to initialize client")
+	}
 
-		found, val, err := lookup(Key(key))
-		if err != nil {
-			log.Error().Str("key", key).Err(err).Msg("Error fetching blob")
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(err.Error()))
-			return
+	var val []byte = nil
+	go func() {
+		for {
+			data := <-ch
+			if data.Error != nil {
+				log.Error().Err(err).Msg("Error while fetching blob value")
+				return
+			}
+			val = data.Value
 		}
-		if !found {
-			w.WriteHeader(http.StatusNotFound)
-			return
-		}
+	}()
+
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write(val)
 	})
 
 	host := maybeEnv("HOST", "0.0.0.0")
 	port := maybeEnv("PORT", "8174")
 	addr := fmt.Sprintf("%s:%s", host, port)
-	blob := "<specified by requester>"
-	if onlyKey != nil {
-		blob = *onlyKey
-	}
 	log.Info().
 		Str("address", addr).
 		Str("endpoint", endpoint).
 		Interface("blob", blob).
-		Dur("fresh_secs", fresh).
+		Dur("interval", interval).
 		Msg("Viteset Sidecar is ready")
 	log.Fatal().Err(http.ListenAndServe(addr, nil)).Send()
 }

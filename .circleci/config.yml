@@ -8,23 +8,17 @@ workflows:
     jobs:
       - docker/publish:
           name: Build Docker image
-          before_build:
-            - run: echo 'export SHORT_SHA="$(echo "$CIRCLE_SHA1" | cut -c -7)"'>> $BASH_ENV
           image: $CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME
-          tag: latest,$SHORT_SHA
           deploy: false
-          filters:
-            branches:
-              ignore: main
       - docker/publish:
           name: Publish Docker image
+          image: $CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME
+          tag: latest,<< pipeline.git.tag >>
+          update-description: true
           context:
             - Docker Hub
-          before_build:
-            - run: echo 'export SHORT_SHA="$(echo "$CIRCLE_SHA1" | cut -c -7)"'>> $BASH_ENV
-          image: $CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME
-          tag: latest,$SHORT_SHA
-          update-description: true
           filters:
             branches:
-              only: main
+              ignore: /.*/
+            tags:
+              only: /.*/
