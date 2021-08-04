@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: viteset-sidecar-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: viteset-sidecar-demo
+  template:
+    metadata:
+      labels:
+        app: viteset-sidecar-demo
+    spec:
+      containers:
+        - name: app
+          image: curlimages/curl
+          command:
+            - sh
+            - -c
+            - |
+              while true; do
+                date
+                curl -s http://localhost:8174
+                echo
+                echo
+                sleep 3
+              done
+          resources:
+            limits:
+              cpu: "0.1"
+              memory: 128Mi
+        - name: viteset-sidecar
+          image: mplewis/viteset-sidecar
+          env:
+            - name: SECRET
+              value: YOUR_VITESET_CLIENT_SECRET_GOES_HERE
+            - name: BLOB
+              value: YOUR_VITESET_BLOB_NAME_GOES_HERE
+          resources:
+            limits:
+              cpu: "0.1"
+              memory: 128Mi

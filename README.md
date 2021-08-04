@@ -1,6 +1,10 @@
 # Viteset Sidecar
 
-The Viteset Sidecar is an easy way to wire a Viteset blob into your cloud-native app without adding any libraries to your app. To get the value of the blob, your app makes a `GET http://sidecar:8174` request which returns the latest-known value for the blob.
+[Viteset](https://viteset.com) lets you configure your app at lightspeed.
+
+The Viteset Sidecar keeps your cloud-native app updated with your latest Viteset configs.
+
+You don't need to add any libraries to your app. To get your latest config, your app makes a GET request to the Viteset Sidecar. The Sidecar handles polling for updates and caching the last known blob value.
 
 # Usage
 
@@ -20,11 +24,15 @@ Then run `curl http://localhost:8174` to retrive the value of your blob from Vit
 
 ## Docker Compose
 
-See the Compose file in [examples/docker-compose.yaml](examples/docker-compose.yaml) which runs an `app` container to poll the value of a blob you define. Make sure to replace the `SECRET` and `BLOB` placeholders with values from your own account.
+See the Compose file in [examples/docker-compose.yaml](examples/docker-compose.yaml) which runs an `app` container to poll the value of a blob you define.
+
+Make sure to replace the `SECRET` and `BLOB` placeholders with values from your own account.
 
 ## Kubernetes
 
-Coming soon.
+See the Deployment in [examples/k8s-deployment.yaml](examples/k8s-deployment.yaml) which runs curl in a loop, to simulate your application requesting the latest blob value from the Sidecar.
+
+Make sure to replace the `YOUR_VITESET_CLIENT_SECRET_GOES_HERE` and `YOUR_VITESET_BLOB_NAME_GOES_HERE` placeholders with values from your own account.
 
 # Caching
 
